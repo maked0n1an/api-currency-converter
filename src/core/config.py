@@ -1,11 +1,12 @@
 from typing import Literal
+
 from dotenv import find_dotenv
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class DbSettings(BaseModel):
-    dialect: str = Field(default='postgres')
+class DbSettings(BaseSettings):
+    dialect: str = Field(default="postgresql")
     async_driver: str = Field(default="asyncpg")
     sync_driver: str = Field(default="psycopg2")
 
@@ -14,6 +15,10 @@ class DbSettings(BaseModel):
     HOST: str
     PORT: int
     NAME: str
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_prefix="DB_", extra="ignore"
+    )
 
     def _build_url(self, driver: str) -> str:
         return (
@@ -30,31 +35,33 @@ class DbSettings(BaseModel):
         return self._build_url(self.sync_driver)
 
 
-class JwtSettings(BaseModel):
+db_settings = DbSettings()
+
+
+class JwtSettings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRES_MINUTES: int
     REFRESH_TOKEN_EXPIRES_DAYS: int
-    ALGORITHM: Literal['HS256', 'RS256', 'PS256', 'EdDSA', 'ES256'] = Field(
-        default='HS256',
-        description='One of digital signature algorithms for decoding/encoding JWT'
+    ALGORITHM: Literal["HS256", "RS256", "PS256", "EdDSA", "ES256"] = Field(
+        default="HS256",
+        description="One of digital signature algorithms for decoding/encoding JWT",
+    )
+
+    model_config = SettingsConfigDict(
+        env_file=find_dotenv(), env_prefix="JWT_", extra="ignore"
     )
 
 
-class CurrencySettings(BaseModel):
+jwt_settings = JwtSettings()
+
+
+class CurrencySettings(BaseSettings):
     API_URL: str
     API_KEY: str
 
-
-class Settings(BaseSettings):
-    db: DbSettings
-    jwt: JwtSettings
-    currency: CurrencySettings
-
     model_config = SettingsConfigDict(
-        env_file=find_dotenv(),
-        env_nested_delimiter="_",
-        env_nested_max_split=1
+        env_file=find_dotenv(), env_prefix="CURRENCY_", extra="ignore"
     )
 
 
-settings = Settings()
+currency_api_settings = CurrencySettings()
