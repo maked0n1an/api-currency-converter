@@ -1,3 +1,4 @@
+from typing_extensions import TypedDict
 import uuid
 
 from pydantic import BaseModel
@@ -32,7 +33,12 @@ class ExternalAuthUserCreateSchema(BaseModel):
     email: str
     first_name: str
     last_name: str
+    
 
+class UserFilter(TypedDict):
+    email: str
+    username: str
+    
 
 class GoogleUserCreateSchema(ExternalAuthUserCreateSchema):
     pass

@@ -24,7 +24,7 @@ class TokenTypeEnum(str, Enum):
 
 class JwtDataToEncode(TypedDict):
     sub: str
-    device_id: str | None = None
+    device_id: str
 
 
 class JwtPayload(BaseModel):
@@ -33,7 +33,7 @@ class JwtPayload(BaseModel):
     exp: datetime.datetime
     iat: datetime.datetime
     typ: str
-    device_id: str | None = None
+    device_id: str
 
 
 class JwtAuth:

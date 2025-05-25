@@ -12,7 +12,6 @@ from src.api.schemas.user import (
     UserReturnSchema,
     UserUpdateSchema,
 )
-from src.exceptions.services import UserAlreadyExistsException
 from src.services.user import UserService
 
 router = APIRouter()
@@ -26,15 +25,6 @@ async def register(
     user_data: UserRegisterSchema,
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserRegisterResponse:
-    db_user = await user_service.find_by_username_or_email(
-        email=user_data.email, username=user_data.username
-    )
-    if db_user:
-        raise UserAlreadyExistsException(
-            f"User with '{user_data.username}' username"
-            f" or '{user_data.email}' email exists"
-        )
-
     return await user_service.add_user(user_data)
 
 

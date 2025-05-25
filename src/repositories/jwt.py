@@ -19,13 +19,11 @@ class JwtTokenRepository:
         result = await self.__session.execute(query)
         return result.scalar()
 
-    async def revoke_token(self, email: str, device_id: str | None = None):
-        conditions = [self.model.email == email]
-
-        if device_id:
-            conditions.append(self.model.device_id == device_id)
-        else:
-            conditions.append(self.model.device_id.is_(None))
+    async def revoke_tokens(self, email: str, device_id: str):
+        conditions = [
+            self.model.email == email, 
+            self.model.device_id == device_id
+        ]
 
         query = update(self.model).where(*conditions).values(is_revoked=True)
         await self.__session.execute(query)

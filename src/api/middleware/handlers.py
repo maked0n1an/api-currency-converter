@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 
 from src.exceptions.services import (
     AuthException,
+    NoHeaderException,
     TokenException,
     UserAlreadyExistsException,
     UserException,
@@ -13,8 +14,12 @@ from src.exceptions.services import (
 
 
 async def auth_exception_handler(request: Request, exc: AuthException):
+    exc_codes = {
+        NoHeaderException: status.HTTP_400_BAD_REQUEST,
+    }
+    status_code = exc_codes.get(type(exc), status.HTTP_401_UNAUTHORIZED)
     return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
+        status_code=status_code,
         content={"detail": exc.message},
     )
 

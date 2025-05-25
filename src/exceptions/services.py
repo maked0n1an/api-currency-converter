@@ -6,9 +6,12 @@ class AuthException(Exception):
         self.message = message
 
 
+class NoHeaderException(AuthException):
+    pass
+
+
 class TokenException(AuthException):
     """Base exception for token-related errors"""
-
     pass
 
 

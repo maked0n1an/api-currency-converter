@@ -6,9 +6,9 @@ from fastapi import APIRouter, Cookie, Depends, Header, Response, status
 from src.api.dependencies.dependencies import get_auth_service
 from src.api.schemas._common import ValidationErrorResponse
 from src.api.schemas.auth import AccessToken, AuthTokenPair, UserCredsSchema
-from src.core.security import TokenTypeEnum
 from src.exceptions.services import (
     NoCrsfTokenException,
+    NoHeaderException,
     NoRefreshTokenException,
 )
 from src.services.auth import AuthService
@@ -28,12 +28,19 @@ router = APIRouter()
     },
 )
 async def login(
-    credentials: UserCredsSchema,
+    creds: UserCredsSchema,
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     device_id: str | None = Header(None, alias="X-Device-ID"),
 ) -> AccessToken:
-    tokens = await auth_service.login(credentials, device_id)
+    if not device_id:
+        raise NoHeaderException("Missing required header: X-Device-ID")
+
+    tokens = await auth_service.login(
+        username=creds.username,
+        password=creds.password,
+        device_id=device_id
+    )
     csrf_token = secrets.token_urlsafe(32)
 
     response.set_cookie(
@@ -72,6 +79,9 @@ async def refresh(
     csrf_header: str | None = Header(None, alias="X-CSRF-Token"),
     device_id: str | None = Header(None, alias="X-Device-ID"),
 ) -> AuthTokenPair:
+    if not device_id:
+        raise NoHeaderException("Missing required header: X-Device-ID")
+
     if not refresh_token:
         raise NoRefreshTokenException(
             "Invalid request data, please login firstly"
@@ -83,8 +93,4 @@ async def refresh(
     if csrf_header != csrf_cookie:
         raise NoCrsfTokenException("Invalid X-CSRF-Token")
 
-    email_from_refresh = await auth_service.verify_token_and_get_subject_claim(
-        refresh_token, TokenTypeEnum.REFRESH
-    )
-
-    return await auth_service.refresh_token(email_from_refresh, device_id)
+    return await auth_service.refresh_token(refresh_token, device_id)

@@ -1,14 +1,19 @@
+from typing import Callable, Type
 from uuid import UUID
 
-from sqlalchemy import or_
+from sqlalchemy import ColumnElement, and_, or_
 
+from src.db.database import Base
+from src.db.models import User
 from src.api.schemas.user import (
+    UserFilter,
     UserRegisterSchema,
     UserReturnSchema,
     UserUpdateSchema,
 )
 from src.utils.password import PasswordHasher
 from src.utils.unit_of_work import IUnitOfWork
+from src.exceptions.services import UserAlreadyExistsException
 
 
 class UserService:
@@ -16,13 +21,22 @@ class UserService:
         self.uow = uow
 
     async def add_user(self, user: UserRegisterSchema) -> UserReturnSchema:
+        where_clauses = self._build_get_filter_by_email_or_username(
+            User,
+            UserFilter(email=user.email, username=user.username)
+        )
         async with self.uow as uow:
-            hashed_password = PasswordHasher.hash(user.password)
+            result = await uow.user.get_user_by_expression(where_clauses)
+            if result:
+                raise UserAlreadyExistsException(
+                    f"User with '{user.username}' username"
+                    f" or '{user.email}' email exists"
+                )
+
             user_data = {
                 **user.model_dump(exclude={"password"}),
-                "hashed_password": hashed_password,
+                "hashed_password": PasswordHasher.hash(user.password),
             }
-
             new_user = await uow.user.add_user(user_data)
             await uow.commit()
             return UserReturnSchema.model_validate(
@@ -49,18 +63,17 @@ class UserService:
                 updated_user, from_attributes=True
             )
 
-    async def find_by_username_or_email(
-        self, username: str | None, email: str | None
-    ) -> UserReturnSchema | None:
-        async with self.uow as uow:
-            conditions = []
-            if username:
-                conditions.append(uow.user.model.username == username)
-            if email:
-                conditions.append(uow.user.model.email == email)
+    def _build_get_filter_by_email_or_username(
+        self,
+        model: Type[Base],
+        where_clauses: dict,
+        operand: Callable = or_
+    ) -> ColumnElement[bool]:
+        conditions = []
+        for key, value in where_clauses.items():
+            if value is not None:
+                conditions.append(getattr(model, key) == value)
 
-            or_filter = or_(*conditions)
-            if result := await uow.user.get_user_by_expression(or_filter):
-                return UserReturnSchema.model_validate(
-                    result, from_attributes=True
-                )
+        if not conditions:
+            raise ValueError("At least one of attributes must be provided")
+        return operand(*conditions)

@@ -23,7 +23,7 @@ class UserRepository:
     async def get_user_by_expression(self, expression) -> User | None:
         query = select(self.model).where(expression)
         result = await self.__session.execute(query)
-        return result.scalar_one_or_none()
+        return result.first()
 
     async def update_user(self, filters: dict, values: dict):
         query = (

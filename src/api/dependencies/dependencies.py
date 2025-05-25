@@ -1,12 +1,9 @@
 from typing import Annotated
 
 from fastapi import Depends, Security
-from fastapi.security import OAuth2PasswordBearer
 
 from src.api.schemas.user import UserReturnSchema
 from src.core.security import (
-    JwtAuth,
-    JwtPayload,
     TokenTypeEnum,
     access_token_header,
 )
@@ -31,15 +28,9 @@ async def get_user_service(
     return UserService(uow)
 
 
-async def parse_jwt_data(
-    token: str = Depends(OAuth2PasswordBearer(tokenUrl="/auth/login")),
-) -> JwtPayload:
-    payload = JwtAuth.decode_token(token)
-    return payload
-
-
-async def get_access_token_from_header(
+async def validate_access_token(
     header: Annotated[str, Security(access_token_header)],
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
 ) -> str:
     if not header:
         raise WrongAuthorizationHeaderException(
@@ -56,17 +47,9 @@ async def get_access_token_from_header(
         raise WrongAuthorizationHeaderException(
             "No authorizarion token received"
         )
-    return token
 
-
-async def validate_access_token(
-    token: Annotated[str, Depends(get_access_token_from_header)],
-    auth_service: Annotated[AuthService, Depends(get_auth_service)],
-) -> str:
-    subject_claim = await auth_service.verify_token_and_get_subject_claim(
-        token, TokenTypeEnum.ACCESS
-    )
-    return subject_claim
+    decoded_payload = await auth_service.verify_token_and_type(token, TokenTypeEnum.ACCESS)
+    return decoded_payload.sub
 
 
 async def get_current_user(
