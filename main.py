@@ -1,10 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
 from src.api.endpoints.auth import router as auth_router
 from src.api.endpoints.user import router as user_router
 from src.api.middleware.handlers import (
     auth_exception_handler,
+    custom_request_validation_handler,
     token_exception_handler,
     user_exception_handler,
 )
@@ -19,6 +21,9 @@ app = FastAPI(title="API CryptoCurrency Converter")
 app.add_exception_handler(AuthException, auth_exception_handler)
 app.add_exception_handler(TokenException, token_exception_handler)
 app.add_exception_handler(UserException, user_exception_handler)
+app.add_exception_handler(
+    RequestValidationError, custom_request_validation_handler
+)
 
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/user", tags=["User"])
