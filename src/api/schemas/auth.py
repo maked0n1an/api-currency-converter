@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UserCredsSchema(BaseModel):
@@ -20,3 +20,14 @@ class JwtTokenCreate(BaseModel):
     token_type: str
     email: str
     device_id: str | None
+
+
+class JwtTokenFilter(BaseModel):
+    email: str
+    is_revoked: bool
+    device_id: str | None = None
+
+
+class LogoutResponse(BaseModel):
+    message: str
+    tokens_revoked: int = Field(..., description="Number of tokens revoked")

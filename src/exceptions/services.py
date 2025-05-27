@@ -12,6 +12,7 @@ class NoHeaderException(AuthException):
 
 class TokenException(AuthException):
     """Base exception for token-related errors"""
+
     pass
 
 
@@ -46,7 +47,7 @@ class NoRefreshTokenException(TokenException):
         super().__init__(message)
 
 
-class NoCrsfTokenException(TokenException):
+class NoCsrfTokenException(TokenException):
     """Raise when no CSRF token is in cookies"""
 
     def __init__(self, message: str = "No CSRF-token provided"):

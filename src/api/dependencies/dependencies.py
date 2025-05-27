@@ -3,10 +3,7 @@ from typing import Annotated
 from fastapi import Depends, Security
 
 from src.api.schemas.user import UserReturnSchema
-from src.core.security import (
-    TokenTypeEnum,
-    access_token_header,
-)
+from src.core.security import TokenTypeEnum, access_token_header
 from src.exceptions.services import (
     UserNotFoundException,
     WrongAuthorizationHeaderException,
@@ -48,7 +45,9 @@ async def validate_access_token(
             "No authorizarion token received"
         )
 
-    decoded_payload = await auth_service.verify_token_and_type(token, TokenTypeEnum.ACCESS)
+    decoded_payload = await auth_service.verify_token_and_type(
+        token, TokenTypeEnum.ACCESS
+    )
     return decoded_payload.sub
 
 

@@ -1,19 +1,19 @@
 from typing import Callable, Type
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, and_, or_
+from sqlalchemy import ColumnElement, or_
 
-from src.db.database import Base
-from src.db.models import User
 from src.api.schemas.user import (
     UserFilter,
     UserRegisterSchema,
     UserReturnSchema,
     UserUpdateSchema,
 )
+from src.db.database import Base
+from src.db.models import User
+from src.exceptions.services import UserAlreadyExistsException
 from src.utils.password import PasswordHasher
 from src.utils.unit_of_work import IUnitOfWork
-from src.exceptions.services import UserAlreadyExistsException
 
 
 class UserService:
@@ -22,8 +22,7 @@ class UserService:
 
     async def add_user(self, user: UserRegisterSchema) -> UserReturnSchema:
         where_clauses = self._build_get_filter_by_email_or_username(
-            User,
-            UserFilter(email=user.email, username=user.username)
+            User, UserFilter(email=user.email, username=user.username)
         )
         async with self.uow as uow:
             result = await uow.user.get_user_by_expression(where_clauses)
@@ -64,10 +63,7 @@ class UserService:
             )
 
     def _build_get_filter_by_email_or_username(
-        self,
-        model: Type[Base],
-        where_clauses: dict,
-        operand: Callable = or_
+        self, model: Type[Base], where_clauses: dict, operand: Callable = or_
     ) -> ColumnElement[bool]:
         conditions = []
         for key, value in where_clauses.items():

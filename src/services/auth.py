@@ -1,6 +1,6 @@
 import secrets
 
-from src.api.schemas.auth import AuthTokenPair, JwtTokenCreate
+from src.api.schemas.auth import AuthTokenPair, JwtTokenCreate, JwtTokenFilter
 from src.api.schemas.user import UserReturnSchema
 from src.core.security import JwtAuth, JwtDataToEncode, TokenTypeEnum
 from src.exceptions.services import (
@@ -19,21 +19,42 @@ class AuthService:
         self.uow = uow
 
     async def login(
-        self,
-        username: str,
-        password: str,
-        device_id: str
+        self, username: str, password: str, device_id: str
     ) -> AuthTokenPair:
         db_user = await self._authenticate_user(username, password)
         return await self._get_new_token_pair(
             JwtDataToEncode(sub=db_user.email, device_id=device_id)
         )
 
+    async def logout(self, email: str, device_id: str) -> int:
+        filters = JwtTokenFilter(
+            email=email, device_id=device_id, is_revoked=False
+        )
+        return await self._logout(filters.model_dump(exclude_none=True))
+
+    async def logout_all(self, email: str) -> int:
+        filters = JwtTokenFilter(email=email, is_revoked=False)
+        return await self._logout(filters.model_dump(exclude_none=True))
+
+    async def refresh_token(
+        self, refresh_token: str, device_id: str
+    ) -> AuthTokenPair:
+        decoded_payload = await self.verify_token_and_type(
+            refresh_token, TokenTypeEnum.REFRESH
+        )
+        async with self.uow as uow:
+            is_revoked = await uow.jwt_token.is_token_revoked(
+                decoded_payload.jti
+            )
+            if is_revoked:
+                raise RevokedTokenException()
+
+        return await self._get_new_token_pair(
+            JwtDataToEncode(sub=decoded_payload.sub, device_id=device_id)
+        )
+
     async def verify_token_and_type(
-        self,
-        token: str,
-        expected_type: TokenTypeEnum,
-        verify_exp: bool = True
+        self, token: str, expected_type: TokenTypeEnum, verify_exp: bool = True
     ):
         try:
             decoded_payload = JwtAuth.decode_token(token, verify_exp)
@@ -50,25 +71,11 @@ class AuthService:
 
         return decoded_payload
 
-    async def refresh_token(
-        self,
-        refresh_token: str,
-        device_id: str
-    ) -> AuthTokenPair:
-        decoded_payload = await self.verify_token_and_type(
-            refresh_token, TokenTypeEnum.REFRESH
-        )
-
+    async def _logout(self, filters: dict) -> int:
         async with self.uow as uow:
-            is_revoked = await uow.jwt_token.is_token_revoked(
-                decoded_payload.jti
-            )
-            if is_revoked:
-                raise RevokedTokenException()
-
-        return await self._get_new_token_pair(
-            JwtDataToEncode(sub=decoded_payload.sub, device_id=device_id)
-        )
+            affected_tokens = await uow.jwt_token.revoke_tokens(filters)
+            await uow.commit()
+            return affected_tokens
 
     async def _authenticate_user(
         self, username: str, password: str
@@ -94,7 +101,9 @@ class AuthService:
                 raise UserNotAuthorizedException(
                     "Invalid username or password"
                 )
-            return UserReturnSchema.model_validate(db_user, from_attributes=True)
+            return UserReturnSchema.model_validate(
+                db_user, from_attributes=True
+            )
 
     async def _get_new_token_pair(
         self,
@@ -103,9 +112,8 @@ class AuthService:
         refresh_payload = JwtAuth.create_payload(data, TokenTypeEnum.REFRESH)
 
         async with self.uow as uow:
-            await uow.jwt_token.revoke_tokens(
-                data["sub"], data["device_id"]
-            )
+            filters = {"email": data["sub"], "device_id": data["device_id"]}
+            await uow.jwt_token.revoke_tokens(filters)
 
             db_token = JwtTokenCreate(
                 id=refresh_payload.jti,
