@@ -6,6 +6,10 @@ from src.api.schemas._common import (
     ValidationErrorDetail,
     ValidationErrorResponse,
 )
+from src.exceptions.routers import (
+    CurrencyRouterException,
+    InvalidSymbolException,
+)
 from src.exceptions.services import (
     AuthServiceException,
     NoHeaderException,
@@ -47,6 +51,17 @@ async def user_exception_handler(request: Request, exc: UserServiceException):
     }
 
     status_code = exc_codes.get(type(exc), status.HTTP_400_BAD_REQUEST)
+    return JSONResponse(
+        status_code=status_code, content={"detail": exc.message}
+    )
+
+
+async def currency_exception_handler(
+    request: Request, exc: CurrencyRouterException
+):
+    exc_codes = {InvalidSymbolException: status.HTTP_400_BAD_REQUEST}
+
+    status_code = exc_codes.get(type(exc))
     return JSONResponse(
         status_code=status_code, content={"detail": exc.message}
     )

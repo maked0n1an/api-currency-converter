@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Security
 
+from src.api.schemas.currency import CurrencyListResponse
 from src.api.schemas.user import UserReturnSchema
 from src.core.security import TokenTypeEnum, access_token_header
 from src.exceptions.services import (
@@ -9,6 +10,7 @@ from src.exceptions.services import (
     WrongAuthorizationHeaderException,
 )
 from src.services.auth import AuthService
+from src.services.converter import ConverterService
 from src.services.user import UserService
 from src.utils.unit_of_work import IUnitOfWork, UnitOfWork
 
@@ -23,6 +25,10 @@ async def get_user_service(
     uow: IUnitOfWork = Depends(UnitOfWork),
 ) -> UserService:
     return UserService(uow)
+
+
+async def get_convert_service() -> ConverterService:
+    return ConverterService()
 
 
 async def validate_access_token(
@@ -60,3 +66,11 @@ async def get_current_user(
         raise UserNotFoundException()
 
     return db_user
+
+
+async def get_available_currencies(
+    current_user: Annotated[UserReturnSchema, Depends(get_current_user)],
+    convert_service: Annotated[ConverterService, Depends(get_convert_service)],
+) -> CurrencyListResponse:
+    currencies = await convert_service.get_available_symbols()
+    return CurrencyListResponse(currencies=currencies)

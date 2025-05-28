@@ -55,13 +55,12 @@ class JwtSettings(BaseSettings):
 jwt_settings = JwtSettings()
 
 
-class CurrencySettings(BaseSettings):
+class CurrencyApiSettings(BaseSettings):
     API_URL: str
-    API_KEY: str
 
     model_config = SettingsConfigDict(
         env_file=find_dotenv(), env_prefix="CURRENCY_", extra="ignore"
     )
 
 
-currency_api_settings = CurrencySettings()
+currency_api_settings = CurrencyApiSettings()
