@@ -22,11 +22,12 @@ router = APIRouter()
 
 @router.post(
     path="/login",
-    status_code=status.HTTP_200_OK,
-    description="Login via username and password",
-    summary="This endpoint returns access token and sets csrf token and refresh token in cookies",
+    summary="Login via username and password",
+    description="This endpoint returns access token and sets csrf token and refresh token in cookies",
     responses={
-        status.HTTP_401_UNAUTHORIZED: {"description": "Invalid credentials"},
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Invalid username or password"
+        },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "model": ValidationErrorResponse
         },
@@ -36,7 +37,7 @@ async def login(
     creds: UserCredsSchema,
     response: Response,
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
-    device_id: str | None = Header(None, alias="X-Device-ID"),
+    device_id: str = Header(..., alias="X-Device-ID"),
 ) -> AccessToken:
     if not device_id:
         raise NoHeaderException("Invalid request")
@@ -69,12 +70,10 @@ async def login(
 @router.post(
     path="/refresh",
     status_code=status.HTTP_201_CREATED,
-    description="Refresh tokens",
-    summary="This endpoint returns new access token and sets csrf token and new refresh token in cookies",
+    summary="Refresh tokens",
+    description="This endpoint returns new access token and sets csrf token and new refresh token in cookies",
     responses={
-        status.HTTP_201_CREATED: {"model": AccessToken},
         status.HTTP_401_UNAUTHORIZED: {"description": "Invalid token"},
-        status.HTTP_403_FORBIDDEN: {"description": "Forbidden"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
             "model": ValidationErrorResponse
         },
@@ -85,8 +84,8 @@ async def refresh(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     csrf_cookie: str = Cookie(None, alias="csrf_token"),
     refresh_token: str = Cookie(None, alias="refresh_token"),
-    csrf_header: str | None = Header(None, alias="X-CSRF-Token"),
-    device_id: str | None = Header(None, alias="X-Device-ID"),
+    csrf_header: str = Header(..., alias="X-CSRF-Token"),
+    device_id: str = Header(..., alias="X-Device-ID"),
 ) -> AccessToken:
     if not device_id:
         raise NoHeaderException("Invalid request")
@@ -113,8 +112,8 @@ async def refresh(
 @router.post(
     path="/logout",
     status_code=status.HTTP_200_OK,
-    description="Logout from the system with device id",
-    summary="This endpoint deletes refresh token with specified device id and csrf token from cookies",
+    summary="Logout from the system with device id",
+    description="This endpoint deletes refresh token with specified device id and csrf token from cookies",
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Invalid token"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
@@ -127,8 +126,8 @@ async def logout(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     current_user: Annotated[UserReturnSchema, Depends(get_current_user)],
     csrf_cookie: str = Cookie(None, alias="csrf_token"),
-    csrf_header: str | None = Header(None, alias="X-CSRF-Token"),
-    device_id: str | None = Header(None, alias="X-Device-ID"),
+    csrf_header: str = Header(..., alias="X-CSRF-Token"),
+    device_id: str = Header(..., alias="X-Device-ID"),
 ) -> LogoutResponse:
     if not device_id:
         raise NoHeaderException("Invalid request")
@@ -147,9 +146,8 @@ async def logout(
 
 @router.post(
     path="/logout_all",
-    status_code=status.HTTP_200_OK,
-    description="Logout from all devices",
-    summary="This endpoint deletes all refresh tokens with specified email and csrf token from cookies",
+    summary="Logout from all devices",
+    description="This endpoint deletes all refresh tokens with specified email and csrf token from cookies",
     responses={
         status.HTTP_401_UNAUTHORIZED: {"description": "Invalid token"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
@@ -161,8 +159,8 @@ async def logout_all(
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
     current_user: Annotated[UserReturnSchema, Depends(get_current_user)],
     csrf_cookie: str = Cookie(None, alias="csrf_token"),
-    csrf_header: str | None = Header(None, alias="X-CSRF-Token"),
-    device_id: str | None = Header(None, alias="X-Device-ID"),
+    csrf_header: str = Header(..., alias="X-CSRF-Token"),
+    device_id: str = Header(..., alias="X-Device-ID"),
 ) -> LogoutResponse:
     if not device_id:
         raise NoHeaderException("Invalid request")
