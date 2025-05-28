@@ -2,20 +2,23 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.api.schemas._common import ValidationErrorDetail, ValidationErrorResponse
+from src.api.schemas._common import (
+    ValidationErrorDetail,
+    ValidationErrorResponse,
+)
 from src.exceptions.services import (
-    AuthException,
+    AuthServiceException,
     NoHeaderException,
-    TokenException,
+    TokenServiceException,
     UserAlreadyExistsException,
-    UserException,
     UserNotAuthorizedException,
     UserNotFoundException,
+    UserServiceException,
     WrongAuthorizationHeaderException,
 )
 
 
-async def auth_exception_handler(request: Request, exc: AuthException):
+async def auth_exception_handler(request: Request, exc: AuthServiceException):
     exc_codes = {
         NoHeaderException: status.HTTP_400_BAD_REQUEST,
     }
@@ -26,14 +29,16 @@ async def auth_exception_handler(request: Request, exc: AuthException):
     )
 
 
-async def token_exception_handler(request: Request, exc: TokenException):
+async def token_exception_handler(
+    request: Request, exc: TokenServiceException
+):
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"detail": exc.message},
     )
 
 
-async def user_exception_handler(request: Request, exc: UserException):
+async def user_exception_handler(request: Request, exc: UserServiceException):
     exc_codes = {
         WrongAuthorizationHeaderException: status.HTTP_401_UNAUTHORIZED,
         UserNotAuthorizedException: status.HTTP_401_UNAUTHORIZED,
