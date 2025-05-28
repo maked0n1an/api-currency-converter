@@ -6,6 +6,7 @@ from src.api.dependencies.dependencies import (
     get_current_user,
     get_user_service,
 )
+from src.api.schemas._common import ValidationErrorResponse
 from src.api.schemas.user import (
     UserRegisterResponse,
     UserRegisterSchema,
@@ -19,7 +20,13 @@ router = APIRouter()
 
 @router.post(
     path="/register",
-    summary="Register using username and password",
+    status_code=status.HTTP_201_CREATED,
+    description="Register using username and password",
+    responses={
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "model": ValidationErrorResponse
+        },
+    },
 )
 async def register(
     user_data: UserRegisterSchema,
@@ -30,12 +37,13 @@ async def register(
 
 @router.put(
     path="/complete_profile",
-    summary="Add user info like name and surname",
+    description="Add user info like name and surname",
     responses={
-        status.HTTP_200_OK: {"model": UserReturnSchema},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid data provided"},
-        status.HTTP_401_UNAUTHORIZED: {"description": "Not authenticated"},
+        status.HTTP_401_UNAUTHORIZED: {"description": "Invalid token"},
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "model": ValidationErrorResponse
+        },
     },
 )
 async def complete_profile(
@@ -50,10 +58,9 @@ async def complete_profile(
 
 @router.get(
     path="/about_me",
-    summary="Get info about authenticated user",
+    description="Get info about authenticated user",
     responses={
-        status.HTTP_200_OK: {"model": UserReturnSchema},
-        status.HTTP_401_UNAUTHORIZED: {"description": "Not authenticated"},
+        status.HTTP_401_UNAUTHORIZED: {"description": "Invalid token"},
         status.HTTP_404_NOT_FOUND: {"description": "User not found"},
     },
 )

@@ -1,18 +1,28 @@
+import re
 import uuid
 
-from pydantic import BaseModel, EmailStr, Field, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
 from typing_extensions import TypedDict
+
+PASSWORD_PATTERN = re.compile(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%\'^&*()_\-+=\[\]{}|\\;:"<>,./?~`]).{12,25}$'
+)
 
 
 class UserRegisterSchema(BaseModel):
-    email: EmailStr = Field(..., description="Error in email")
-    username: str = Field(..., description="Username should be string")
+    email: EmailStr = Field(...)
+    username: str = Field(...)
     password: str = Field(
         min_length=12,
         max_length=25,
-        description="Password must be 12-25 characters long and contain uppercase, lowercase, digit, and special character",
     )
-    
+
     @field_validator("username")
     def validate_str(cls, value: str, info: ValidationInfo):
         if not value.isalpha():
@@ -21,29 +31,25 @@ class UserRegisterSchema(BaseModel):
             )
         return value
 
-
     @field_validator("password")
     def validate_password(cls, value: str):
-        if not any(c.isupper() for c in value):
+        if not PASSWORD_PATTERN.match(value):
             raise ValueError(
-                "Password should contain at least one uppercase letter"
+                "Password must be 12-25 characters long and contain uppercase, lowercase, digit, and special character"
             )
-
-        if not any(c.islower() for c in value):
-            raise ValueError(
-                "Password should contain at least one lowercase letter"
-            )
-
-        if not any(c.isdigit() for c in value):
-            raise ValueError("Password should contain at least one digit")
-
-        special_chars = "!@#$%'^&*()_-+={}[|]\\;:\"<>,./?~`"
-        if not any(c in special_chars for c in value):
-            raise ValueError(
-                "Password should contain at least one special character"
-            )
-
         return value
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "user@example.com",
+                    "username": "thebestuser",
+                    "password": "~BeMoreProactive71!"
+                }
+            ]
+        }
+    }
 
 
 class UserUpdateSchema(BaseModel):
@@ -67,6 +73,20 @@ class UserReturnSchema(BaseModel):
     first_name: str | None
     last_name: str | None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "email": "test@example.com",
+                    "username": "testuser",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                }
+            ]
+        }
+    }
+
 
 class ExternalAuthUserCreateSchema(BaseModel):
     email: str
@@ -78,6 +98,18 @@ class UserRegisterResponse(BaseModel):
     id: uuid.UUID
     email: str
     username: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "email": "test@example.com",
+                    "username": "testuser",
+                }
+            ]
+        }
+    }
 
 
 class UserFilter(TypedDict):
