@@ -9,7 +9,7 @@ async def test_register_user(client: AsyncClient):
         "username": "testuser",
         "password": "ValidPassWord@123",
     }
-    response = await client.post("/user/register", json=payload)
+    response = await client.post("/api/user/register", json=payload)
     data = response.json()
 
     assert response.status_code == 201
@@ -27,7 +27,7 @@ async def test_register_duplicate_user(client: AsyncClient, create_user_in_db, d
         "password": "HelloNigga-71"
     }
 
-    response = await client.post("/user/register", json=payload)
+    response = await client.post("/api/user/register", json=payload)
 
     assert response.status_code == 409
     assert response.json() == {
@@ -41,7 +41,7 @@ async def test_complete_profile(client: AsyncClient, authed_user):
     payload = {"first_name": "John", "last_name": "Doe"}
 
     response = await client.put(
-        "/user/complete_profile",
+        "/api/user/complete_profile",
         json=payload,
         headers={
             "Authorization": authed_user["headers"]["Authorization"]
@@ -59,7 +59,7 @@ async def test_about_me(client: AsyncClient, test_user_data, authed_user):
     client.cookies = authed_user["cookies"]
 
     response = await client.get(
-        "/user/about_me",
+        "/api/user/about_me",
         headers={
             "Authorization": authed_user["headers"]["Authorization"]
         }
@@ -73,5 +73,5 @@ async def test_about_me(client: AsyncClient, test_user_data, authed_user):
 
 @pytest.mark.asyncio
 async def test_about_me_unauthorized(client: AsyncClient):
-    response = await client.get("/user/about_me")
+    response = await client.get("/api/user/about_me")
     assert response.status_code == 401

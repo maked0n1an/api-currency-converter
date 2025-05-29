@@ -29,12 +29,12 @@ app.add_exception_handler(
     RequestValidationError, custom_request_validation_handler
 )
 
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-app.include_router(user_router, prefix="/user", tags=["User"])
-app.include_router(converter_router, prefix="/currency", tags=["Converter"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(user_router, prefix="/api/user", tags=["User"])
+app.include_router(converter_router, prefix="/api/currency", tags=["Converter"])
 
 
-@app.get("/")
+@app.get("/api")
 async def main_page():
     return {"message": "Welcome to API Currency Converter!"}
 

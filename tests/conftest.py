@@ -117,7 +117,7 @@ async def authed_user(
     await create_user_in_db(**db_user)
 
     response = await client.post(
-        url="/auth/login",
+        url="/api/auth/login",
         json={
             "username": "testuser",
             "password": "_TestPassword87!"

@@ -7,7 +7,7 @@ async def test_login_success(client: AsyncClient, db_user, test_user_data, creat
     await create_user_in_db(**db_user)
 
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": test_user_data["username"],
             "password": test_user_data["password"]
@@ -28,7 +28,7 @@ async def test_login_wrong_password(client: AsyncClient, db_user, test_user_data
     test_user_data["password"] = "WrongPassword1!"
 
     response = await client.post(
-        "/auth/login",
+        "/api/auth/login",
         json={
             "username": test_user_data["username"],
             "password": test_user_data["password"]
@@ -45,7 +45,7 @@ async def test_refresh_success(client: AsyncClient, authed_user):
     client.cookies = authed_user["cookies"]
     client.headers = authed_user["headers"]
 
-    response = await client.post("/auth/refresh")
+    response = await client.post("/api/auth/refresh")
     data = response.json()
 
     assert response.status_code == 201
@@ -58,7 +58,7 @@ async def test_logout_success(client: AsyncClient, authed_user):
     client.cookies = authed_user["cookies"]
     client.headers = authed_user["headers"]
 
-    response = await client.get("/auth/logout")
+    response = await client.get("/api/auth/logout")
     data = response.json()
 
     assert response.status_code == 200
@@ -69,7 +69,7 @@ async def test_logout_success(client: AsyncClient, authed_user):
 @pytest.mark.asyncio
 async def test_logout_all_success(client: AsyncClient, test_user_data):
     await client.post(
-        "/user/register",
+        "/api/user/register",
         json={
             "email": test_user_data["email"],
             "username": test_user_data["username"],
@@ -83,7 +83,7 @@ async def test_logout_all_success(client: AsyncClient, test_user_data):
     # Login from multiple devices
     for device_id in device_ids:
         response = await client.post(
-            "/auth/login",
+            "/api/auth/login",
             json={
                 "username": test_user_data["username"],
                 "password": test_user_data["password"]
@@ -106,7 +106,7 @@ async def test_logout_all_success(client: AsyncClient, test_user_data):
     # Use one device to call logout_all
     headers, cookies = login_cookies_headers[0]
     response = await client.post(
-        "/auth/logout_all", 
+        "/api/auth/logout_all", 
         headers=headers, 
         cookies=cookies
     )

@@ -21,7 +21,7 @@ async def test_get_currency_list(client: AsyncClient, authed_user, monkeypatch):
         fake_get_available,
     )
 
-    response = await client.get("/currency/list")
+    response = await client.get("/api/currency/list")
     data = response.json()["currencies"]
 
     assert response.status_code == 200
@@ -66,7 +66,7 @@ async def test_convert_success(client: AsyncClient, authed_user, monkeypatch):
         "to_symbols": ["BTC", "USDT", "DOGE"],
         "amount": "1.5"
     }
-    response = await client.post("/currency/convert", json=payload)
+    response = await client.post("/api/currency/convert", json=payload)
     data = response.json()
 
     assert response.status_code == 200
@@ -97,7 +97,7 @@ async def test_convert_invalid_from_symbol(client: AsyncClient, authed_user, mon
         "to_symbols": ["ETH"],
         "amount": 3000
     }
-    response = await client.post("/currency/convert", json=payload)
+    response = await client.post("/api/currency/convert", json=payload)
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid 'from' symbol: 'USDT'"}
@@ -121,7 +121,7 @@ async def test_convert_invalid_to_symbols(client: AsyncClient, authed_user, monk
         "to_symbols": ["ETH"],
         "amount": 3000
     }
-    response = await client.post("/currency/convert", json=payload)
+    response = await client.post("/api/currency/convert", json=payload)
 
     assert response.status_code == 400
     assert response.json() == {
@@ -144,7 +144,7 @@ async def test_convert_invalid_unauthed_user(client: AsyncClient, monkeypatch):
         "to_symbols": ["USDT"],
         "amount": 1.5
     }
-    response = await client.post("/currency/convert", json=payload)
+    response = await client.post("/api/currency/convert", json=payload)
 
     assert response.status_code == 401
     assert response.json() == {'detail': 'No Authorization header received'}
