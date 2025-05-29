@@ -25,10 +25,7 @@ class DbSettings(BaseSettings):
 
     PREPARE_DB: Literal["PROD", "TEST"]
 
-    model_config = SettingsConfigDict(
-        env_file=find_dotenv(),
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=find_dotenv(), extra="ignore")
 
     @property
     def DATABASE_URL(self) -> str:

@@ -45,7 +45,7 @@ class UserRegisterSchema(BaseModel):
                 {
                     "email": "user@example.com",
                     "username": "thebestuser",
-                    "password": "~BeMoreProactive71!"
+                    "password": "~BeMoreProactive71!",
                 }
             ]
         }

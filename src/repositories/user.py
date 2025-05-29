@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import User
@@ -34,3 +34,8 @@ class UserRepository:
         )
         result = await self.__session.execute(query)
         return result.scalar_one()
+
+    async def delete_user(self, expression) -> bool:
+        query = delete(self.model).where(expression)
+        result = await self.__session.execute(query)
+        return result.rowcount > 0

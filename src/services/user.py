@@ -62,6 +62,17 @@ class UserService:
                 updated_user, from_attributes=True
             )
 
+    async def delete_user(self, username: str) -> bool:
+        async with self.uow as uow:
+            is_result = await uow.user.delete_user(User.username == username)
+            if is_result:
+                await self.uow.jwt_token.revoke_tokens(
+                    filters={"username": username}
+                )
+
+            await uow.commit()
+            return is_result
+
     def _build_get_filter_by_email_or_username(
         self, model: Type[Base], where_clauses: dict, operand: Callable = or_
     ) -> ColumnElement[bool]:

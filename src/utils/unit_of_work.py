@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from src.db.database import async_session_maker
 from src.repositories.jwt import JwtTokenRepository
 from src.repositories.user import UserRepository
 
@@ -22,10 +21,6 @@ class IUnitOfWork(ABC):
         ...
 
     @abstractmethod
-    async def __aexit__(self):
-        ...
-
-    @abstractmethod
     async def commit(self):
         ...
 
@@ -35,23 +30,23 @@ class IUnitOfWork(ABC):
 
 
 class UnitOfWork(IUnitOfWork):
-    def __init__(self):
-        self.session_factory = async_session_maker
+    def __init__(self, async_session_maker):
+        self._session_factory = async_session_maker
 
     async def __aenter__(self):
-        self.__session = self.session_factory()
+        self.session = self._session_factory()
 
-        self.user = UserRepository(self.__session)
-        self.jwt_token = JwtTokenRepository(self.__session)
+        self.user = UserRepository(self.session)
+        self.jwt_token = JwtTokenRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.rollback()
-        await self.__session.close()
-        self.__session = None
+        await self.session.close()
+        self.session = None
 
     async def commit(self):
-        await self.__session.commit()
+        await self.session.commit()
 
     async def rollback(self):
-        await self.__session.rollback()
+        await self.session.rollback()
