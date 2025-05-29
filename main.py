@@ -38,5 +38,6 @@ app.include_router(converter_router, prefix="/currency", tags=["Converter"])
 async def main_page():
     return {"message": "Welcome to API Currency Converter!"}
 
+
 if __name__ == "__main__":
     uvicorn.run(app=app, port=8000)
