@@ -51,7 +51,7 @@ async def login(
         key="csrf_token",
         value=csrf_token,
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="strict",
     )
     response.headers["X-CSRF-Token"] = csrf_token
@@ -60,7 +60,7 @@ async def login(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="strict",
     )
 
@@ -103,13 +103,13 @@ async def refresh(
         key="refresh_token",
         value=new_token_pair.refresh_token,
         httponly=True,
-        secure=False,
+        secure=True,
         samesite="strict",
     )
     return AccessToken(access_token=new_token_pair.access_token)
 
 
-@router.post(
+@router.get(
     path="/logout",
     status_code=status.HTTP_200_OK,
     summary="Logout from the system with device id",

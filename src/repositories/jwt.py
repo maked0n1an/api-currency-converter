@@ -17,7 +17,7 @@ class JwtTokenRepository:
     async def is_token_revoked(self, token_id: str) -> bool:
         query = select(self.model.is_revoked).filter(self.model.id == token_id)
         result = await self.__session.execute(query)
-        return result.scalar() or False
+        return result.scalar_one_or_none()
 
     async def revoke_tokens(self, filters: dict) -> int:
         query = update(self.model).filter_by(**filters).values(is_revoked=True)

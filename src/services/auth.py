@@ -46,6 +46,10 @@ class AuthService:
             is_revoked = await uow.jwt_token.is_token_revoked(
                 decoded_payload.jti
             )
+
+            if is_revoked is None:
+                raise InvalidTokenException()
+
             if is_revoked:
                 raise RevokedTokenException()
 
