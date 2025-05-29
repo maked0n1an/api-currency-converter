@@ -1,38 +1,48 @@
 from typing import Literal
 
-from dotenv import find_dotenv
+from dotenv import find_dotenv, load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv(override=True)
 
 
 class DbSettings(BaseSettings):
     dialect: str = Field(default="postgresql")
     async_driver: str = Field(default="asyncpg")
-    sync_driver: str = Field(default="psycopg2")
 
-    USER: str
-    PASS: str
-    HOST: str
-    PORT: int
-    NAME: str
+    DB_USER: str
+    DB_PASS: str
+    DB_HOST: str
+    DB_PORT: int
+    DB_NAME: str
+
+    TEST_DB_USER: str
+    TEST_DB_PASS: str
+    TEST_DB_HOST: str
+    TEST_DB_PORT: str
+    TEST_DB_NAME: str
+
+    PREPARE_DB: Literal["PROD", "TEST"]
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_prefix="DB_", extra="ignore"
+        env_file=find_dotenv(),
+        extra="ignore"
     )
 
-    def _build_url(self, driver: str) -> str:
+    @property
+    def DATABASE_URL(self) -> str:
         return (
-            f"{self.dialect}+{driver}://{self.USER}:{self.PASS}@"
-            f"{self.HOST}:{self.PORT}/{self.NAME}"
+            f"{self.dialect}+{self.async_driver}://{self.DB_USER}:{self.DB_PASS}@"
+            f"{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
     @property
-    def ASYNC_DATABASE_URL(self) -> str:
-        return self._build_url(self.async_driver)
-
-    @property
-    def SYNC_DATABASE_URL(self) -> str:
-        return self._build_url(self.sync_driver)
+    def TEST_DATABASE_URL(self) -> str:
+        return (
+            f"{self.dialect}+{self.async_driver}://{self.TEST_DB_USER}:{self.TEST_DB_PASS}@"
+            f"{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.TEST_DB_NAME}"
+        )
 
 
 db_settings = DbSettings()

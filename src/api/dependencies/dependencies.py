@@ -1,9 +1,11 @@
 from typing import Annotated
 
 from fastapi import Depends, Security
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.api.schemas.currency import CurrencyListResponse
 from src.api.schemas.user import UserReturnSchema
+from src.core.config import db_settings
 from src.core.security import TokenTypeEnum, access_token_header
 from src.exceptions.services import (
     UserNotFoundException,
@@ -15,14 +17,26 @@ from src.services.user import UserService
 from src.utils.unit_of_work import IUnitOfWork, UnitOfWork
 
 
+async def get_session_maker():
+    engine = create_async_engine(db_settings.DATABASE_URL)
+    async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    return async_session_maker
+
+
+async def get_unit_of_work(
+    async_session_maker=Depends(get_session_maker),
+) -> UnitOfWork:
+    return UnitOfWork(async_session_maker)
+
+
 async def get_auth_service(
-    uow: IUnitOfWork = Depends(UnitOfWork),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
 ) -> AuthService:
     return AuthService(uow)
 
 
 async def get_user_service(
-    uow: IUnitOfWork = Depends(UnitOfWork),
+    uow: IUnitOfWork = Depends(get_unit_of_work),
 ) -> UserService:
     return UserService(uow)
 
