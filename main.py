@@ -33,5 +33,10 @@ app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/user", tags=["User"])
 app.include_router(converter_router, prefix="/currency", tags=["Converter"])
 
+
+@app.get("/")
+async def main_page():
+    return {"message": "Welcome to API Currency Converter!"}
+
 if __name__ == "__main__":
     uvicorn.run(app=app, port=8000)

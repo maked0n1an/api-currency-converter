@@ -61,11 +61,9 @@ class ConvertRatesResponse(BaseModel):
         description="Rates of conversion",
         examples=[
             {
-                "rates": {
-                    "BTC": 0.03625336,
-                    "USDT": 3944.025,
-                    "DOGE": 17680.02671711,
-                }
+                "BTC": 0.03625336,
+                "USDT": 3944.025,
+                "DOGE": 17680.02671711,
             }
         ],
     )
