@@ -26,10 +26,13 @@ The project is built on **FastAPI** and uses the following libraries:
 | Library                | Purpose                                                |
 |------------------------|--------------------------------------------------------|
 | `fastapi`              | Main web framework                                     |
+| `sqlalchemy`           | Python SQL Toolkit and Object Relational Mapper        |
+| `asyncpg`              | Database interface library designed for PostgreSQL     |
 | `uvicorn`              | ASGI server for running FastAPI applications           |
 | `starlette`            | Web framework underlying FastAPI                       |
 | `pydantic`             | Data validation and serialization                      |
 | `pydantic-settings`    | Configuration management via `.env`                    |
+| `alembic`              | Lightweight database migration tool with SQLAlchemy    |
 | `python-dotenv`        | Loads environment variables from `.env` file           |
 | `passlib`              | Password hashing                                       |
 | `PyJWT`                | JWT token handling                                     |
@@ -38,7 +41,7 @@ The project is built on **FastAPI** and uses the following libraries:
 
 | Library                | Purpose                                                |
 |------------------------|--------------------------------------------------------|
-| `httpx`, `httpcore`    | Alternative HTTP client (optional dependencies)        |
+| `httpx`                | Alternative HTTP client (optional dependencies)        |
 
 ### ✅ Testing
 
