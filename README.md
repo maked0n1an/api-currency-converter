@@ -154,7 +154,3 @@ This project uses [Coinlore API](https://www.coinlore.com/cryptocurrency-data-ap
 No API key is required for Coinlore.
 
 ---
-
-## Contact
-For questions or support, contact via Telegram:
-<a name="Links"></a>
