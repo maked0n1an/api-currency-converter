@@ -158,6 +158,3 @@ No API key is required for Coinlore.
 ## Contact
 For questions or support, contact via Telegram:
 <a name="Links"></a>
-
-[![DM](https://img.shields.io/badge/DM-0088cc?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/maked0n1an)
----
