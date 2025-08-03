@@ -1,8 +1,7 @@
-from uuid import uuid4
 import pytest
 from typing import Any, TypedDict
 from typing_extensions import NotRequired
-from httpx import ASGITransport, AsyncClient, head
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
@@ -34,13 +33,13 @@ async def engine():
 
 
 @pytest.fixture(scope="session")
-async def async_session_maker(engine: AsyncEngine):
+async def test_session_maker(engine: AsyncEngine):
     return async_sessionmaker(engine, expire_on_commit=False)
 
 
 @pytest.fixture()
-async def session(async_session_maker):
-    async with async_session_maker() as session:
+async def session(test_session_maker):
+    async with test_session_maker() as session:
         yield session
 
 
@@ -54,8 +53,8 @@ async def clean_tables(engine: AsyncEngine):
 
 
 @pytest.fixture()
-async def client(async_session_maker):
-    app.dependency_overrides[get_session_maker] = lambda: async_session_maker
+async def client(test_session_maker):
+    app.dependency_overrides[get_session_maker] = lambda: test_session_maker
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

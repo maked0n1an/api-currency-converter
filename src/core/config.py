@@ -20,7 +20,7 @@ class DbSettings(BaseSettings):
     TEST_DB_USER: str
     TEST_DB_PASS: str
     TEST_DB_HOST: str
-    TEST_DB_PORT: str
+    TEST_DB_PORT: int
     TEST_DB_NAME: str
 
     PREPARE_DB: Literal["PROD", "TEST"]
