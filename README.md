@@ -91,10 +91,7 @@ pip install -r requirements.txt
 Copy `example.env` to `.env` using next command:
 
 ```sh
-# Windows:
-make prepare-env-windows
-# Linux/macOS:
-make prepare-env-linux
+make prepare-env
 ```
 
 and fill in all required variables.
@@ -110,11 +107,9 @@ PREPARE_DB=PROD
 ### 6. Apply database migrations
 
 ```sh
-# Windows:
-make up-local-windows
-# Linux/macOS:
-make up-local-linux
+make up-infra
 ```
+- After this command, the script creates the database with the specified name in .env and applies Alembic migrations to the local database.
 
 ### 7. Launch the application
 
@@ -132,12 +127,9 @@ The API will be available at [http://localhost:8000](http://localhost:8000).
 - Set `PREPARE_DB=TEST` in your `.env` and use the appropriate `make` command:
 
 ```sh
-# Windows:
-make up-local-windows
-# Linux/macOS:
-make up-local-linux
+make up-test-infra
 ```
-- After these commands Alembic migrations will be applied to Docker database.
+- After this command, Alembic migrations will be applied to the Docker database.
 
 ---
 

@@ -1,31 +1,42 @@
 # Makefile
 
-# Include the prepare-env.mk file
-# prepare-env.mk
+# Platform detection and command definitions
 
-.PHONY: prepare-dev
+include .env
 
-prepare-env-windows:
+ifdef OS
+    # Windows
+    SLEEP = timeout /T 2 /NOBREAK > NUL
+    ENV_COPY = if not exist .env copy .env.example .env >nul 2>&1
+else
+    ifeq ($(shell uname), Linux)
+        # Linux
+        SLEEP = sleep 2
+        ENV_COPY = if [ ! -f .env ]; then cp .env.example .env; fi
+    endif
+endif
+
+.PHONY: prepare-env up-infra up-test-infra down up-remote down-remote
+
+prepare-env:
 	@echo Creating .env config
-	@if not exist .env copy .env.example .env >nul 2>&1
+	@$(ENV_COPY)
 
-prepare-env-unix:
-	@echo Creating .env config
-	@ if [ ! -f .env ]; then cp .env.example .env; fi
+up-infra:
+	@echo Creating database ${DB_NAME}...
+	@psql -h localhost -U postgres -c "CREATE DATABASE ${DB_NAME};" || echo ""
+	@echo Waiting 2 secs for Postgres to be ready...
+	@$(SLEEP)
+	@alembic upgrade head
 
-up-local-windows:
+up-test-infra:
+	@echo Creating test database...
 	@docker compose -f docker-compose.yaml up -d
 	@echo Waiting 2 secs for Postgres to be ready...
-	@timeout /T 2 /NOBREAK > NUL
+	@$(SLEEP)
 	@alembic upgrade head
 
-up-local-unix:
-	@docker compose -f docker-compose.yaml up -docker
-	@echo Waiting 2 secs for Postgres to be ready...
-	@sleep 2
-	@alembic upgrade head
-
-down-local:
+down:
 	@docker compose -f docker-compose.yaml down && docker network prune --force
 
 up-remote:
