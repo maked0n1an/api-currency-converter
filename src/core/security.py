@@ -39,29 +39,30 @@ class JwtPayload(BaseModel):
 class JwtAuth:
     @staticmethod
     def create_payload(
-        data: JwtDataToEncode, token_type: TokenTypeEnum
+        sub: str,
+        device_id: str,
+        token_type: TokenTypeEnum
     ) -> JwtPayload:
         current_time = datetime.datetime.now(datetime.timezone.utc)
 
-        match token_type:
-            case TokenTypeEnum.ACCESS:
-                expire_delta = datetime.timedelta(
-                    minutes=jwt_settings.ACCESS_TOKEN_EXPIRES_MINUTES
-                )
-            case TokenTypeEnum.REFRESH:
-                expire_delta = datetime.timedelta(
-                    days=jwt_settings.REFRESH_TOKEN_EXPIRES_DAYS
-                )
-            case _:
-                raise ValueError("Wrong token type")
+        if token_type == TokenTypeEnum.ACCESS:
+            expire_delta = datetime.timedelta(
+                minutes=jwt_settings.ACCESS_TOKEN_EXPIRES_MINUTES
+            )
+        elif token_type == TokenTypeEnum.REFRESH:
+            expire_delta = datetime.timedelta(
+                days=jwt_settings.REFRESH_TOKEN_EXPIRES_DAYS
+            )
+        else:
+            raise ValueError(f"Unsupported token type: {token_type}")
 
         return JwtPayload(
             jti=str(uuid.uuid4()),
-            sub=data["sub"],
+            sub=sub,
             exp=current_time + expire_delta,
             iat=current_time,
             typ=token_type,
-            device_id=data["device_id"],
+            device_id=device_id,
         )
 
     @staticmethod

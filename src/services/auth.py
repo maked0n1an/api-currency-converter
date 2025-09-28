@@ -2,7 +2,7 @@ import secrets
 
 from src.api.schemas.auth import AuthTokenPair, JwtTokenCreate, JwtTokenFilter
 from src.api.schemas.user import UserReturnSchema
-from src.core.security import JwtAuth, JwtDataToEncode, TokenTypeEnum
+from src.core.security import JwtAuth, TokenTypeEnum
 from src.exceptions.services import (
     InvalidTokenException,
     RevokedTokenException,
@@ -22,9 +22,7 @@ class AuthService:
         self, username: str, password: str, device_id: str
     ) -> AuthTokenPair:
         db_user = await self._authenticate_user(username, password)
-        return await self._get_new_token_pair(
-            JwtDataToEncode(sub=db_user.email, device_id=device_id)
-        )
+        return await self._get_new_token_pair(db_user.email, device_id)
 
     async def logout(self, email: str, device_id: str) -> int:
         filters = JwtTokenFilter(
@@ -53,9 +51,7 @@ class AuthService:
             if is_revoked:
                 raise RevokedTokenException()
 
-        return await self._get_new_token_pair(
-            JwtDataToEncode(sub=decoded_payload.sub, device_id=device_id)
-        )
+        return await self._get_new_token_pair(decoded_payload.sub, device_id)
 
     async def verify_token_and_type(
         self, token: str, expected_type: TokenTypeEnum, verify_exp: bool = True
@@ -111,12 +107,15 @@ class AuthService:
 
     async def _get_new_token_pair(
         self,
-        data: JwtDataToEncode,
+        email: str,
+        device_id: str,
     ) -> AuthTokenPair:
-        refresh_payload = JwtAuth.create_payload(data, TokenTypeEnum.REFRESH)
+        refresh_payload = JwtAuth.create_payload(
+            email, device_id, TokenTypeEnum.REFRESH
+        )
 
         async with self.uow as uow:
-            filters = {"email": data["sub"], "device_id": data["device_id"]}
+            filters = {"email": email, "device_id": device_id}
             await uow.jwt_token.revoke_tokens(filters)
 
             db_token = JwtTokenCreate(
@@ -128,9 +127,10 @@ class AuthService:
             await uow.jwt_token.add_token(db_token.model_dump())
             await uow.commit()
 
-        access_payload = JwtAuth.create_payload(data, TokenTypeEnum.ACCESS)
-        access_token = JwtAuth.create_token(access_payload)
-        refresh_token = JwtAuth.create_token(refresh_payload)
+        access_payload = JwtAuth.create_payload(
+            email, device_id, TokenTypeEnum.ACCESS
+        )
         return AuthTokenPair(
-            access_token=access_token, refresh_token=refresh_token
+            access_token=JwtAuth.create_token(access_payload), 
+            refresh_token=JwtAuth.create_token(refresh_payload)
         )
