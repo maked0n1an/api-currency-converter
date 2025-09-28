@@ -1,14 +1,14 @@
-ARG BASE_IMAGE=python:3.10-slim-buster
+ARG BASE_IMAGE=python:3.10-slim-bookworm
 FROM ${BASE_IMAGE}
 
-RUN mkdir /fastapi_app
+RUN apt-get update && apt-get install -y make
 
-WORKDIR /fastapi_app
+RUN mkdir /api-currency-converter
+COPY . /api-currency-converter
+WORKDIR /api-currency-converter
 
-COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python3 -m pip install -r requirements.txt
+EXPOSE 80
 
-COPY . .
-
-CMD ["uvicorn", "src.main:app", "--host", "127.0.0.1", "--port", "80"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

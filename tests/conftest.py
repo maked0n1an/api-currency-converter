@@ -1,27 +1,29 @@
-import pytest
 from typing import Any, TypedDict
-from typing_extensions import NotRequired
+
+import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
     async_sessionmaker,
     create_async_engine,
-    AsyncSession,
-    AsyncEngine,
 )
 from sqlalchemy.pool import NullPool
+from typing_extensions import NotRequired
 
+from main import app
 from src.api.dependencies.dependencies import get_session_maker
 from src.core.config import db_settings
 from src.db.database import Base
 from src.db.models import User
 from src.utils.password import PasswordHasher
-from main import app
 
 
 @pytest.fixture(scope="session")
 async def engine():
     async_engine = create_async_engine(
-        db_settings.TEST_DATABASE_URL, echo=True, poolclass=NullPool)
+        db_settings.TEST_DATABASE_URL, echo=False, poolclass=NullPool
+    )
 
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -79,9 +81,7 @@ def test_user_data() -> TestUser:
         email="user@example.com",
         username="testuser",
         password="_TestPassword87!",
-        headers={
-            "X-Device-ID": "test-device"
-        }
+        headers={"X-Device-ID": "test-device"},
     )
     return new_user
 
@@ -91,7 +91,7 @@ def db_user() -> dict[str, str]:
     return {
         "email": "user@example.com",
         "username": "testuser",
-        "hashed_password": PasswordHasher.hash("_TestPassword87!")
+        "hashed_password": PasswordHasher.hash("_TestPassword87!"),
     }
 
 
@@ -101,6 +101,7 @@ async def create_user_in_db(session: AsyncSession):
         user = User(**kwargs)
         session.add(user)
         await session.commit()
+        await session.refresh(user)
         return user
 
     return _create_user
@@ -111,19 +112,14 @@ async def authed_user(
     client: AsyncClient,
     create_user_in_db,
     db_user: dict[str, str],
-    test_user_data: TestUser
+    test_user_data: TestUser,
 ) -> TestUser:
     await create_user_in_db(**db_user)
 
     response = await client.post(
         url="/api/auth/login",
-        json={
-            "username": "testuser",
-            "password": "_TestPassword87!"
-        },
-        headers={
-            "X-Device-ID": "test-device"
-        }
+        json={"username": "testuser", "password": "_TestPassword87!"},
+        headers={"X-Device-ID": "test-device"},
     )
     tokens = response.json()
 
@@ -138,6 +134,6 @@ async def authed_user(
         },
         cookies={
             "csrf_token": response.cookies.get("csrf_token"),
-            "refresh_token": response.cookies.get("refresh_token")
+            "refresh_token": response.cookies.get("refresh_token"),
         },
     )

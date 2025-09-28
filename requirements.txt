@@ -4,7 +4,7 @@ bcrypt==4.3.0
 fastapi[standard]==0.115.12
 sqlalchemy==2.0.40
 passlib==1.7.4
-psycopg2==2.9.10
+psycopg2-binary==2.9.10
 pytest==8.3.5
 pytest-asyncio==1.0.0
 pydantic_settings==2.9.1
